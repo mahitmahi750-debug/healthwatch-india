@@ -1,41 +1,38 @@
-import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface StatCardProps {
-  title: string;
+  label: string;
   value: string | number;
   icon: LucideIcon;
-  description?: string;
-  variant?: "default" | "success" | "warning" | "danger";
+  trend?: string;
+  tone?: "primary" | "success" | "warning" | "danger" | "accent";
 }
 
-const variantStyles = {
-  default: "border-border",
-  success: "border-[hsl(var(--risk-low)/0.4)]",
-  warning: "border-[hsl(var(--risk-medium)/0.4)]",
-  danger: "border-[hsl(var(--risk-high)/0.4)]",
+const TONES = {
+  primary: "from-primary/20 to-primary/5 text-primary border-primary/30",
+  success: "from-[hsl(var(--success)/0.2)] to-[hsl(var(--success)/0.05)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.3)]",
+  warning: "from-[hsl(var(--warning)/0.2)] to-[hsl(var(--warning)/0.05)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.3)]",
+  danger: "from-[hsl(var(--destructive)/0.2)] to-[hsl(var(--destructive)/0.05)] text-[hsl(var(--destructive))] border-[hsl(var(--destructive)/0.3)]",
+  accent: "from-accent/20 to-accent/5 text-accent border-accent/30",
 };
 
-const iconStyles = {
-  default: "text-primary bg-primary/10",
-  success: "text-[hsl(var(--risk-low))] bg-[hsl(var(--risk-low)/0.1)]",
-  warning: "text-[hsl(var(--risk-medium))] bg-[hsl(var(--risk-medium)/0.1)]",
-  danger: "text-[hsl(var(--risk-high))] bg-[hsl(var(--risk-high)/0.1)]",
-};
-
-export function StatCard({ title, value, icon: Icon, description, variant = "default" }: StatCardProps) {
+const StatCard = ({ label, value, icon: Icon, trend, tone = "primary" }: StatCardProps) => {
   return (
-    <div className={cn("glass-card rounded-xl p-5 transition-shadow hover:shadow-md", variantStyles[variant])}>
-      <div className="flex items-start justify-between">
+    <div className={cn("relative glass rounded-2xl p-5 overflow-hidden group hover:-translate-y-0.5 transition-transform", "border")}>
+      <div className={cn("absolute inset-0 bg-gradient-to-br opacity-60", TONES[tone].split(" ").slice(0, 2).join(" "))} />
+      <div className="relative flex items-start justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold mt-1 text-foreground">{value}</p>
-          {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
+          <div className="mt-2 text-3xl font-semibold tracking-tight text-foreground">{value}</div>
+          {trend && <div className="mt-1 text-xs text-muted-foreground">{trend}</div>}
         </div>
-        <div className={cn("p-2.5 rounded-lg", iconStyles[variant])}>
+        <div className={cn("h-10 w-10 rounded-xl grid place-items-center border bg-background/40", TONES[tone].split(" ").slice(2).join(" "))}>
           <Icon className="h-5 w-5" />
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default StatCard;

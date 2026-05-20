@@ -1,25 +1,15 @@
+import { RiskLevel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-interface RiskBadgeProps {
-  level: "LOW" | "MEDIUM" | "HIGH";
-  className?: string;
-}
-
-export function RiskBadge({ level, className }: RiskBadgeProps) {
+const RiskBadge = ({ level, className }: { level: RiskLevel; className?: string }) => {
+  const cls =
+    level === "HIGH" ? "risk-badge-high" : level === "MEDIUM" ? "risk-badge-medium" : "risk-badge-low";
   return (
-    <span
-      className={cn(
-        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold",
-        level === "LOW" && "risk-badge-low",
-        level === "MEDIUM" && "risk-badge-medium",
-        level === "HIGH" && "risk-badge-high",
-        className
-      )}
-    >
-      {level === "HIGH" && "🔴 "}
-      {level === "MEDIUM" && "🟡 "}
-      {level === "LOW" && "🟢 "}
+    <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider", cls, className)}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
       {level}
     </span>
   );
-}
+};
+
+export default RiskBadge;

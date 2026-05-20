@@ -6,9 +6,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/lib/store";
 import AppLayout from "@/components/AppLayout";
 import Index from "./pages/Index";
-import WaterData from "./pages/WaterData";
-import HealthData from "./pages/HealthData";
-import Alerts from "./pages/Alerts";
+import SafetyMap from "./pages/SafetyMap";
+import Incidents from "./pages/Incidents";
+import SOS from "./pages/SOS";
+import Chatbot from "./pages/Chatbot";
+import Identity from "./pages/Identity";
+import Admin from "./pages/Admin";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
@@ -24,9 +27,12 @@ const App = () => (
           <AppLayout>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/water" element={<WaterData />} />
-              <Route path="/health" element={<HealthData />} />
-              <Route path="/alerts" element={<Alerts />} />
+              <Route path="/map" element={<SafetyMap />} />
+              <Route path="/incidents" element={<Incidents />} />
+              <Route path="/sos" element={<SOS />} />
+              <Route path="/chatbot" element={<Chatbot />} />
+              <Route path="/identity" element={<Identity />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="/about" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
