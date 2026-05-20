@@ -1,35 +1,44 @@
-export interface WaterReading {
+export type RiskLevel = "LOW" | "MEDIUM" | "HIGH";
+
+export interface Tourist {
   id: string;
-  village: string;
-  ph: number;
-  turbidity: number;
-  temperature: number;
-  timestamp: string;
+  name: string;
+  nationality: string;
+  passportHash: string; // simulated blockchain hash
+  blockchainId: string; // e.g. 0x... tx hash
+  checkInDate: string;
+  location: { lat: number; lng: number; place: string };
+  safetyScore: number; // 0-100
+  status: "ACTIVE" | "ALERT" | "SOS" | "CHECKED_OUT";
+  emergencyContact: string;
 }
 
-export interface HealthReport {
+export interface GeoZone {
   id: string;
-  village: string;
-  diarrheaCases: number;
-  feverCases: number;
-  vomitingCases: number;
-  timestamp: string;
+  name: string;
+  center: { lat: number; lng: number };
+  radiusKm: number;
+  riskLevel: RiskLevel;
+  category: "RESTRICTED" | "WEATHER" | "CROWD" | "CRIME" | "SAFE";
+  description: string;
 }
 
-export interface RiskAssessment {
-  village: string;
-  level: "LOW" | "MEDIUM" | "HIGH";
-  waterScore: number;
-  healthScore: number;
-  totalScore: number;
+export interface Incident {
+  id: string;
+  type: "SOS" | "THEFT" | "MEDICAL" | "ACCIDENT" | "HARASSMENT" | "LOST" | "WEATHER";
+  severity: RiskLevel;
+  touristId?: string;
+  location: { lat: number; lng: number; place: string };
+  description: string;
+  status: "OPEN" | "DISPATCHED" | "RESOLVED";
   timestamp: string;
+  blockchainTx?: string;
 }
 
-export interface Alert {
+export interface SafetyService {
   id: string;
-  village: string;
-  level: "MEDIUM" | "HIGH";
-  message: string;
-  timestamp: string;
-  acknowledged: boolean;
+  name: string;
+  type: "HOSPITAL" | "POLICE" | "SHELTER" | "TOURIST_HELP";
+  location: { lat: number; lng: number };
+  phone: string;
 }

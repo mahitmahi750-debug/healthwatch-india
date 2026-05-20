@@ -1,87 +1,70 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { WaterReading, HealthReport, RiskAssessment, Alert } from "./types";
-import {
-  generateSeedWaterReadings,
-  generateSeedHealthReports,
-  predictRisk,
-  generateAlerts,
-  getUniqueVillages,
-} from "./data";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { Incident, Tourist } from "./types";
+import { generateIncidents, generateTourists } from "./data";
 
 interface AppState {
-  waterReadings: WaterReading[];
-  healthReports: HealthReport[];
-  riskAssessments: RiskAssessment[];
-  alerts: Alert[];
-  addWaterReading: (r: Omit<WaterReading, "id" | "timestamp">) => void;
-  addHealthReport: (r: Omit<HealthReport, "id" | "timestamp">) => void;
-  acknowledgeAlert: (id: string) => void;
-  refreshRisks: () => void;
+  tourists: Tourist[];
+  incidents: Incident[];
+  addIncident: (inc: Incident) => void;
+  updateIncident: (id: string, patch: Partial<Incident>) => void;
+  resetSeed: () => void;
 }
 
-const AppContext = createContext<AppState | null>(null);
+const Ctx = createContext<AppState | null>(null);
+const LS_T = "sts.tourists.v1";
+const LS_I = "sts.incidents.v1";
 
-function load<T>(key: string, fallback: () => T): T {
-  try {
-    const stored = localStorage.getItem(key);
-    if (stored) return JSON.parse(stored);
-  } catch {}
-  return fallback();
-}
+export const AppProvider = ({ children }: { children: React.ReactNode }) => {
+  const [tourists, setTourists] = useState<Tourist[]>(() => {
+    try {
+      const raw = localStorage.getItem(LS_T);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return generateTourists(28);
+  });
+  const [incidents, setIncidents] = useState<Incident[]>(() => {
+    try {
+      const raw = localStorage.getItem(LS_I);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return [];
+  });
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [waterReadings, setWaterReadings] = useState<WaterReading[]>(() =>
-    load("water_readings", generateSeedWaterReadings)
-  );
-  const [healthReports, setHealthReports] = useState<HealthReport[]>(() =>
-    load("health_reports", generateSeedHealthReports)
-  );
-  const [alerts, setAlerts] = useState<Alert[]>(() => load("alerts", () => []));
-  const [riskAssessments, setRiskAssessments] = useState<RiskAssessment[]>([]);
-
-  const refreshRisks = useCallback(() => {
-    const villages = getUniqueVillages(waterReadings, healthReports);
-    const assessments = villages.map(v => predictRisk(waterReadings, healthReports, v));
-    setRiskAssessments(assessments);
-    const newAlerts = generateAlerts(assessments);
-    if (newAlerts.length > 0) {
-      setAlerts(prev => {
-        const existing = new Set(prev.map(a => a.village + a.level));
-        const fresh = newAlerts.filter(a => !existing.has(a.village + a.level));
-        return [...fresh, ...prev].slice(0, 100);
-      });
+  // seed incidents once we have tourists
+  useEffect(() => {
+    if (incidents.length === 0 && tourists.length) {
+      setIncidents(generateIncidents(tourists, 12));
     }
-  }, [waterReadings, healthReports]);
+  }, []); // eslint-disable-line
 
-  useEffect(() => { refreshRisks(); }, [refreshRisks]);
+  useEffect(() => {
+    localStorage.setItem(LS_T, JSON.stringify(tourists));
+  }, [tourists]);
+  useEffect(() => {
+    localStorage.setItem(LS_I, JSON.stringify(incidents));
+  }, [incidents]);
 
-  useEffect(() => { localStorage.setItem("water_readings", JSON.stringify(waterReadings)); }, [waterReadings]);
-  useEffect(() => { localStorage.setItem("health_reports", JSON.stringify(healthReports)); }, [healthReports]);
-  useEffect(() => { localStorage.setItem("alerts", JSON.stringify(alerts)); }, [alerts]);
-
-  const addWaterReading = (r: Omit<WaterReading, "id" | "timestamp">) => {
-    const reading: WaterReading = { ...r, id: `wr-${Date.now()}`, timestamp: new Date().toISOString() };
-    setWaterReadings(prev => [reading, ...prev]);
-  };
-
-  const addHealthReport = (r: Omit<HealthReport, "id" | "timestamp">) => {
-    const report: HealthReport = { ...r, id: `hr-${Date.now()}`, timestamp: new Date().toISOString() };
-    setHealthReports(prev => [report, ...prev]);
-  };
-
-  const acknowledgeAlert = (id: string) => {
-    setAlerts(prev => prev.map(a => a.id === id ? { ...a, acknowledged: true } : a));
-  };
-
-  return (
-    <AppContext.Provider value={{ waterReadings, healthReports, riskAssessments, alerts, addWaterReading, addHealthReport, acknowledgeAlert, refreshRisks }}>
-      {children}
-    </AppContext.Provider>
+  const value = useMemo<AppState>(
+    () => ({
+      tourists,
+      incidents,
+      addIncident: (inc) => setIncidents((prev) => [inc, ...prev]),
+      updateIncident: (id, patch) =>
+        setIncidents((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i))),
+      resetSeed: () => {
+        const t = generateTourists(28);
+        setTourists(t);
+        setIncidents(generateIncidents(t, 12));
+      },
+    }),
+    [tourists, incidents]
   );
-}
 
-export function useAppData() {
-  const ctx = useContext(AppContext);
-  if (!ctx) throw new Error("useAppData must be used within AppProvider");
-  return ctx;
-}
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+};
+
+export const useApp = () => {
+  const v = useContext(Ctx);
+  if (!v) throw new Error("useApp must be used within AppProvider");
+  return v;
+};
